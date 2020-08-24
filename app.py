@@ -6,7 +6,7 @@ Author: mahongliang
 Mail: mahongliang@139.com
 Date：2020/8/24 15:29
 """
-from flask import Flask, url_for, render_template
+from flask import Flask, url_for, render_template,redirect,request, flash
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -21,6 +21,7 @@ else:
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.root_path,'data.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'dev'
 db = SQLAlchemy(app)
 name = 'Grey Li'
 movies = [
@@ -28,8 +29,20 @@ movies = [
     {'title':'Dead Poest Society','year':'1822'},
 ]
 
-@app.route('/')
+@app.route('/', methods=['GET','POST'])
 def index():
+    if request.method == 'POST':
+        title = request.form.get('title')
+        year = request.form.get('year')
+        if not title or not year or len(year) > 4 or len(title) > 60:
+            flash('Invalid input.')
+            return redirect(url_for('index'))
+        movie = Movie(title = title, year = year)
+        db.session.add(movie)
+        db.session.commit()
+        flash('Item created.')
+        return redirect(url_for('index'))
+
     user = User.query.first()
     movies = Movie.query.all()
     #return render_template('index.html', user=user, movies=movies)
