@@ -6,12 +6,19 @@ Author: mahongliang
 Mail: mahongliang@139.com
 Date：2020/8/24 15:29
 """
-from flask import Flask
-from flask import url_for
+from flask import Flask, url_for, render_template
 
 app = Flask(__name__)
+name = 'Grey Li'
+movies = [
+    {'title':'My Neighbor Totoro','year':'1988'},
+    {'title':'Dead Poest Society','year':'1822'},
+]
 
 @app.route('/')
+def index():
+    return render_template('index.html', name=name, movies=movies)
+
 @app.route('/home')
 @app.route('/abc')
 def hello():
