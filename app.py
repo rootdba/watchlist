@@ -67,6 +67,15 @@ def edit(movie_id):
         return redirect(url_for('index'))
     return render_template('edit.html', movie=movie)
 
+@app.route('/movie/delete/<int:movie_id>', methods=['POST'])    #只接受post
+def delete(movie_id):
+    movie = Movie.query.get_or_404(movie_id)    #获取电影记录
+    db.session.delete(movie)    #删除对应的记录
+    db.session.commit()
+    flash('Item deleted.')
+    return redirect(url_for('index'))
+
+
 @app.route('/home')
 @app.route('/abc')
 def hello():
