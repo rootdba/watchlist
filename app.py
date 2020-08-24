@@ -32,7 +32,8 @@ movies = [
 def index():
     user = User.query.first()
     movies = Movie.query.all()
-    return render_template('index.html', user=user, movies=movies)
+    #return render_template('index.html', user=user, movies=movies)
+    return render_template('index.html', movies=movies)
 
 @app.route('/home')
 @app.route('/abc')
@@ -93,3 +94,13 @@ def forge():
         db.session.add(movie)
     db.session.commit()
     click.echo('导入完成')
+
+@app.errorhandler(404)
+def page_not_found(e):
+    user = User.query.first()
+    return render_template('404.html'), 404
+
+@app.context_processor
+def inject_user():
+    user = User.query.first()
+    return dict(user=user)
