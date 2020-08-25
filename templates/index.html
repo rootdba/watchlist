@@ -3,21 +3,25 @@
 {% block content %}
     {# 使用length过滤器获取movies变量的长度 #}
     <p>{{ movies|length }} Titles</p>
+    {% if current_user.is_authenticated %}
     <form method="post">
         Name <input type="text" name="title" autocomplete="off" required>
         Year <input TYPE="text" name="year" autocomplete="off" required>
         <input class="btn" type="submit" name="submit" value="Add">
     </form>
+    {% endif %}
     <ul class="movie-list">
         {% for movie in movies %} {# 迭代 movies 变量#}
         <li>{{ movie.title }} - {{ movie.year }} {#等同于movie['title']#}
         <!--<li>{{ user.id }} -- {{ user.name }}</li>!-->
         <span class="float-right">
             <a class="imdb" href="https://movie.douban.com/subject_search?search_text={{ movie.title }}" target="_blank" title="Find this movie on IMDB">IMDB</a>
+            {% if current_user.is_authenticated %}
             <a class="btn" href="{{ url_for('edit', movie_id=movie.id) }}">Edit</a>
             <form class="inline-form" method="post" action="{{ url_for('delete', movie_id=movie.id) }}">
                 <input class="btn" type="submit" name="delete" value="Delete" onclick="return confirm('Are you sure?')">
             </form>
+            {% endif %}
         </span>
         </li>
         {% endfor %} {#使用endfor结束for循环#}
