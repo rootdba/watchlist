@@ -6,4 +6,7 @@ __pycache__
 .gitignore
 Pipfile
 *.db
-.idea
+.idea/
+*.tar
+*.zip
+target/
