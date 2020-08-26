@@ -10,3 +10,4 @@ Pipfile
 *.tar
 *.zip
 target/
+*.war

@@ -6,14 +6,15 @@ Author: mahongliang
 Mail: mahongliang@139.com
 Date：2020/8/24 15:29
 """
-from flask import Flask, url_for, render_template,redirect,request, flash
+import click
+from flask import Flask, url_for, render_template, redirect, request, flash
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-
 
 import os
 import sys
+
 WIN = sys.platform.startswith('win')
 if WIN:
     prefix = 'sqlite:///'
@@ -21,35 +22,37 @@ else:
     prefix = 'sqlite:////'
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.root_path,'data.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.root_path, 'data.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'dev'
 db = SQLAlchemy(app)
 name = 'Grey Li'
 movies = [
-    {'title':'My Neighbor Totoro','year':'1988'},
-    {'title':'Dead Poest Society','year':'1822'},
+    {'title': 'My Neighbor Totoro', 'year': '1988'},
+    {'title': 'Dead Poest Society', 'year': '1822'},
 ]
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
 
 @login_manager.user_loader
 def load_user(user_id):
     user = User.query.get(int(user_id))
     return user
 
-@app.route('/', methods=['GET','POST'])
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        if not current_user.is_authenticated:   #如果当前用户未认证
+        if not current_user.is_authenticated:  # 如果当前用户未认证
             return redirect(url_for('index'))
         title = request.form.get('title')
         year = request.form.get('year')
         if not title or not year or len(year) > 4 or len(title) > 60:
             flash('Invalid input.')
             return redirect(url_for('index'))
-        movie = Movie(title = title, year = year)
+        movie = Movie(title=title, year=year)
         db.session.add(movie)
         db.session.commit()
         flash('Item created.')
@@ -57,10 +60,11 @@ def index():
 
     user = User.query.first()
     movies = Movie.query.all()
-    #return render_template('index.html', user=user, movies=movies)
+    # return render_template('index.html', user=user, movies=movies)
     return render_template('index.html', movies=movies)
 
-@app.route('/settings', methods=['GET','POST'])
+
+@app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
     if request.method == 'POST':
@@ -75,6 +79,7 @@ def settings():
         return redirect(url_for('index'))
     return render_template('settings.html')
 
+
 @app.route('/movie/edit/<int:movie_id>', methods=['GET', 'POST'])
 @login_required
 def edit(movie_id):
@@ -86,7 +91,7 @@ def edit(movie_id):
 
         if not title or not year or len(year) > 4 or len(title) > 60:
             flash('Invalid input')
-            return redirect(url_for('edit', movie_id = movie_id))
+            return redirect(url_for('edit', movie_id=movie_id))
 
         movie.title = title
         movie.year = year
@@ -95,16 +100,18 @@ def edit(movie_id):
         return redirect(url_for('index'))
     return render_template('edit.html', movie=movie)
 
-@app.route('/movie/delete/<int:movie_id>', methods=['POST'])    #只接受post
+
+@app.route('/movie/delete/<int:movie_id>', methods=['POST'])  # 只接受post
 @login_required
 def delete(movie_id):
-    movie = Movie.query.get_or_404(movie_id)    #获取电影记录
-    db.session.delete(movie)    #删除对应的记录
+    movie = Movie.query.get_or_404(movie_id)  # 获取电影记录
+    db.session.delete(movie)  # 删除对应的记录
     db.session.commit()
     flash('Item deleted.')
     return redirect(url_for('index'))
 
-@app.route('/login', methods=['GET','POST'])
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
@@ -126,6 +133,7 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -139,25 +147,28 @@ def logout():
 def hello():
     return u"<h1>大苏打撒旦Welcome to </h1><hr>My Whatchlist!<img src='https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png'>"
 
+
 @app.route('/user/<name>')
 def user_page(name):
-    #return 'User page'
+    # return 'User page'
     return 'User: %s' % name
+
 
 @app.route('/test')
 def test_url_for():
-    #print(url_for(user_page))
+    # print(url_for(user_page))
     print(url_for('user_page', name='greyli'))
     return 'Test Page'
 
+
 class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True) #主键
+    id = db.Column(db.Integer, primary_key=True)  # 主键
     name = db.Column(db.String(20))
     username = db.Column(db.String(20))
     password_hash = db.Column(db.String(256))
 
-    def set_password(self, password):   #接受密码作为参数
-        self.password_hash = generate_password_hash(password)   #将生成的密码保存到对应字段
+    def set_password(self, password):  # 接受密码作为参数
+        self.password_hash = generate_password_hash(password)  # 将生成的密码保存到对应字段
 
     def validate_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -165,20 +176,22 @@ class User(db.Model, UserMixin):
 
 class Movie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(20)) #标题
-    year = db.Column(db.String(4))  #年份
+    title = db.Column(db.String(20))  # 标题
+    year = db.Column(db.String(4))  # 年份
 
-#自定义initdb 自动创建数据库表操作
-import click
-@app.cli.command()   #注册为命令
+
+# 自定义initdb 自动创建数据库表操作
+
+
+@app.cli.command()  # 注册为命令
 @click.option('--drop', is_flag=True, help='Create after drop.')
 def initdb(drop):
-    if drop:    #判断是否输入了选项
+    if drop:  # 判断是否输入了选项
         db.drop_all()
     db.create_all()
-    click.echo('Initialized database')  #输出提示信息
+    click.echo('Initialized database')  # 输出提示信息
 
-import click
+
 @app.cli.command()
 def forge():
     db.create_all()
@@ -203,7 +216,7 @@ def forge():
     db.session.commit()
     click.echo('导入完成')
 
-import click
+
 @app.cli.command()
 @click.option('--username', prompt=True, help='The username used to login.')
 @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='The password used to login.')
@@ -225,10 +238,12 @@ def admin(username, password):
     db.session.commit()
     click.echo('Done.')
 
+
 @app.errorhandler(404)
 def page_not_found(e):
     user = User.query.first()
     return render_template('404.html'), 404
+
 
 @app.context_processor
 def inject_user():
